@@ -1,0 +1,10 @@
+bin
+hostdeploy
+.idea
+logs
+data/*.db
+notifiers/*/data
+**node_modules
+dist*
+out
+*_bak

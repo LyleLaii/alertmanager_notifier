@@ -1,0 +1,20 @@
+userota: false
+static_login: dbb342c8604b24b466a1920002a14858
+database:
+  sqlite:
+    datapath: 'data/alertmanager_notifier.db'
+#  postgres:
+#    host: '127.0.0.1'
+#    port: '5432'
+#    dbname: 'alertmanager_notifier'
+#    user: 'postgres'
+#    password: 'abc123!'
+#    sslmode: 'disable'
+receivers:
+  - name: test
+    receiver_type: uid
+    shell_config:
+      - command: echo
+        args:
+          - a
+          - b

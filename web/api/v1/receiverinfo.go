@@ -29,7 +29,7 @@ func GetReceiverInfoListPage(logger log.Logger) gin.HandlerFunc {
 		ril = ril[st:ed]
 		data, err := json.Marshal(ril)
 		if err != nil {
-			logger.Warn("RECEIVERINFO", fmt.Sprintf("get rota list page find err: %v", err))
+			logger.Warn("ReceiverInfo", fmt.Sprintf("get rota list page find err: %v", err))
 		}
 
 		c.JSON(http.StatusOK, gin.H{

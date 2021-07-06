@@ -91,9 +91,9 @@ func run() int {
 	logger := log.NewZapSugarLogger(loggerConfig)
 	//ginLogger := log.NewZapSugarLoggerGin(loggerConfig)
 
-	logger.Info("AlertManager-Notifier", fmt.Sprintf("Version InfoContext: %s", version.InfoContext()))
-	logger.Info("AlertManager-Notifier", fmt.Sprintf("Build InfoContext: %s", version.BuildContext()))
-	logger.Info("AlertManager-Notifier", fmt.Sprintf("ListenPort: %s, RunMode: %v, UserRota: %v", *port, runConfig.RunMode.String(), utils.GetUseRote()))
+	logger.Info(SERVERNAME, fmt.Sprintf("Version InfoContext: %s", version.InfoContext()))
+	logger.Info(SERVERNAME, fmt.Sprintf("Build InfoContext: %s", version.BuildContext()))
+	logger.Info(SERVERNAME, fmt.Sprintf("ListenPort: %s, RunMode: %v, UserRota: %v", *port, runConfig.RunMode.String(), utils.GetUseRote()))
 
 	db.InitDBHandler(logger, &runConfig)
 

@@ -18,22 +18,9 @@ Flags:
 
 ```
 
-## 前置条件
-
-告警规则改造：
-
-1.Prometheus rule添加labels
-- service
-- group
-
-2.alertmanager 添加路由，根据lables确定receiver，如
+## AlertManager Receiver 配置
 
 ``` yaml
-- receiver: system:operator
-  match:
-    group: system
-    service: node
-
 receivers:
   - name: system:operator
     webhook_configs:
@@ -73,8 +60,8 @@ receivers:
     shell_config:     # 接收通道配置
       - command: echo
         args:
-          - a
-          - b
+          - {{ .Receiver }}
+          - {{ $labels.instance }}
 ```
 
 参数模版
@@ -87,3 +74,6 @@ receivers:
 {{ $alert.<config> }}
 {{ $labels.<label_name> }}
 ```
+
+
+*In order to learn golang*

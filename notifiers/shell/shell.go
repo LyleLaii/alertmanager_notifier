@@ -3,11 +3,14 @@ package shell
 import (
 	"alertmanager_notifier/config"
 	"alertmanager_notifier/log"
+	"alertmanager_notifier/metrics"
 	"alertmanager_notifier/notifiers"
 	"alertmanager_notifier/template"
 	"fmt"
 	"os/exec"
 )
+
+const executorName = "shellExecutor"
 
 type Shell struct {
 	name   string
@@ -32,19 +35,21 @@ func (s Shell) Notify(am *notifiers.AlertMessage)  {
 		for _, value := range s.config.Args {
 			result, err := s.tmpl.ParseTmplString(index, value, am)
 			if err != nil {
-				s.logger.Error("shellExecutor", err)
+				s.logger.Error(executorName, err)
 			}
 			argList = append(argList, result)
 		}
 
-		s.logger.Debug("shellExecutor", fmt.Sprintf("%+v, %+v", s.config.Command, argList))
+		s.logger.Debug(executorName, fmt.Sprintf("%+v, %+v", s.config.Command, argList))
 
 		cmd := exec.Command(s.config.Command, argList...)
 		output, err := cmd.CombinedOutput()
+		metrics.CountVecNotifier.WithLabelValues(executorName).Inc()
 		if err != nil {
-			s.logger.Warn("shellExecutor", fmt.Sprintf("exec command return err: %+v", err))
+			s.logger.Warn(executorName, fmt.Sprintf("exec command return err: %+v", err))
+			metrics.CountVecErrorNotifier.WithLabelValues(executorName).Inc()
 		}
-		s.logger.Info("shellExecutor", string(output))
+		s.logger.Info(executorName, string(output))
 	}
 
 }

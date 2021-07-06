@@ -5,7 +5,6 @@ import (
 	"alertmanager_notifier/log"
 	"alertmanager_notifier/metrics"
 	"alertmanager_notifier/notifiers"
-	"alertmanager_notifier/pkg/utils"
 	"alertmanager_notifier/template"
 	"encoding/json"
 	"fmt"
@@ -13,6 +12,8 @@ import (
 
 	"github.com/Shopify/sarama"
 )
+
+const executorName = "kafkaExecutor"
 
 // Kafka kafka notify instance
 type Kafka struct {
@@ -49,49 +50,42 @@ func New(name string, c *config.KafkaConfig, tmpl *template.Template, logger log
 
 // Notify Send notify
 func (k *Kafka) Notify(am *notifiers.AlertMessage) {
-	ms := k.GenerateMessage(am)
+	ms := k.GenerateMessage(am, k.tmpl)
 	for _, m := range ms {
 		jsonstr, _ := json.Marshal(m)
-		k.logger.Debug("kafkaserver",
+		k.logger.Debug(executorName,
 			fmt.Sprintf("Send msg to %s: %v", k.name, string(jsonstr)))
 		msg := &sarama.ProducerMessage{
-			Key:   sarama.StringEncoder("key_" + m["messageid"]),
+			// Key:   sarama.StringEncoder(),
 			Topic: k.config.Topic,
 			Value: sarama.ByteEncoder(jsonstr),
 		}
-		metrics.CountVecNotifier.WithLabelValues("kafka").Inc()
+		metrics.CountVecNotifier.WithLabelValues(executorName).Inc()
 		s := time.Now()
 		_, _, err := k.client.SendMessage(msg)
 		elapsed := time.Since(s)
 		if err != nil {
-			k.logger.Error("kafkaserver", err)
-			metrics.CountVecErrorNotifier.WithLabelValues("kafka").Inc()
+			k.logger.Error(executorName, err)
+			metrics.CountVecErrorNotifier.WithLabelValues(executorName).Inc()
 		}
-		k.logger.Debug("kafkaserver", fmt.Sprintf("It took %v to send msg", elapsed))
-		metrics.HistogramVecNofityDuration.WithLabelValues("kafka").Observe(float64(elapsed.Milliseconds()))
+		k.logger.Debug(executorName, fmt.Sprintf("It took %v to send msg", elapsed))
+		metrics.HistogramVecNofityDuration.WithLabelValues(executorName).Observe(float64(elapsed.Milliseconds()))
 	}
 }
 
 // GenerateMessage generate alert message
-// 占位符替换，待重构
-func (k *Kafka) GenerateMessage(am *notifiers.AlertMessage) (messages []map[string]string) {
+func (k *Kafka) GenerateMessage(am *notifiers.AlertMessage, tmpl *template.Template) (messages []map[string]string) {
 	var m map[string]string
-	for _, alert := range am.AlertInfo.Alerts {
+	for index, _ := range am.AlertInfo.Alerts {
 		m = make(map[string]string)
-		var alertinfo string
-		if am.AlertInfo.Status == "firing" {
-			alertinfo = fmt.Sprintf("%s [Firing since %s] %s",
-				k.config.Info,
-				utils.TransTimeZoneAuto(alert.StartsAt),
-				alert.Annotations["message"])
+		for key, v := range k.config.MsgContent {
+			value, err := tmpl.ParseTmplString(index, v, am)
+			if err != nil {
+				k.logger.Error(executorName, err)
+			}
+			m[key] = value
 		}
-		if am.AlertInfo.Status == "resolved" {
-			alertinfo = fmt.Sprintf("%s [Resolved at %s] %s",
-				k.config.Info,
-				utils.TransTimeZoneAuto(alert.EndsAt),
-				alert.Annotations["message"])
-		}
-		m["receiver"] = alertinfo
+
 		messages = append(messages, m)
 	}
 	return

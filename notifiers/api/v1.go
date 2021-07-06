@@ -43,7 +43,7 @@ func AlertWebhook(ni []notifiers.NotifyIntegration, logger log.Logger) gin.Handl
 						am.ReceiverDate.Format(config.TimeLayoutTZ)))
 				continue
 			}
-			// TODO: 考虑将多个告警信息拆分成多个结构体传递，避免在notifer内部进行循环遍历
+			// TODO: TBD how to send multi alert
 			go n.Notify(am)
 		}
 	}

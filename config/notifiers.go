@@ -28,8 +28,7 @@ type KafkaConfig struct {
 	Topic        string            `mapstructure:"topic"`
 	Broker       []string          `mapstructure:"Broker"`
 	BrokerConfig BrokerConfig      `mapstructure:"broker_config,omitempty"`
-	Info         []string          `mapstructure:"info"`
-	Fixedmessage map[string]string `mapstructure:"fixedmessage,omitempty"`
+	MsgContent   map[string]string `mapstructure:"msg_content,omitempty"`
 }
 
 // BrokerConfig kafka broker client config

@@ -7,9 +7,10 @@ import (
 	"alertmanager_notifier/notifiers"
 	e "alertmanager_notifier/pkg/err"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func AlertWebhook(ni []notifiers.NotifyIntegration, logger log.Logger) gin.HandlerFunc {
@@ -33,6 +34,7 @@ func AlertWebhook(ni []notifiers.NotifyIntegration, logger log.Logger) gin.Handl
 		am.ReceiverDate = time.Now()
 		am.AlertInfo = awi
 		for _, n := range ni {
+			// TODO： 先搜索用户，再遍历对应接受通道？
 			am.Receiver = notifiers.SearchReceiver(awi.Receiver, am.ReceiverDate.Format(config.TimeLayout), n.ReceiverType)
 			if am.Receiver == "" {
 				logger.Warn("Notify",
